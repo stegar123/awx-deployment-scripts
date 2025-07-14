@@ -1,0 +1,77 @@
+---
+# nfs-server-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-server-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: linode-block-storage-retain
+---
+# nfs-server-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-service
+spec:
+  type: ClusterIP
+  selector:
+    app: nfs-server
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+    - name: rpcbind-udp
+      port: 111
+      protocol: UDP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-server
+  template:
+    metadata:
+      labels:
+        app: nfs-server
+    spec:
+      containers:
+        - name: nfs-server
+          securityContext:
+            capabilities:
+              add: ["SYS_ADMIN", "SETPCAP"]
+                #          image: itsthenetwork/nfs-server-alpine:latest
+          image: k8s.gcr.io/volume-nfs:0.8
+          env:
+          - name: SHARED_DIRECTORY
+            value: /exports
+          ports:
+            - containerPort: 2049
+            - containerPort: 20048
+            - containerPort: 111
+            - name: receiver-111
+              protocol: UDP
+              containerPort: 111
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: nfs-data
+              mountPath: /exports
+          args:
+            - /exports
+      volumes:
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-server-pvc
+

@@ -1,0 +1,104 @@
+---
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: awx
+  namespace: awx
+spec:
+
+  postgres_data_volume_init: true
+  postgres_init_container_commands: |
+      chown 26:0 /var/lib/pgsql/data
+      chmod 700 /var/lib/pgsql/data 
+  postgres_configuration_secret: awx-old-postgres-configuration
+  admin_user: admin
+  admin_password_secret: awx-admin-password
+  projects_persistence: true
+  projects_existing_claim: “awx-data”
+  nodeport_port: 30000
+  replicas: 3
+
+
+    #  hostname: awx.nl.mdb-lab.com
+    #  ingress_type: ingress
+    #  ingress_class_name: avi-lb
+    #  ingress_tls_secret: awx.nl.mdb-lab.com
+    #  service_type: ClusterIP
+    #  service_type: LoadBalancer
+
+  service_type: ClusterIP
+  ingress_type: ingress
+  hostname: awx.saas.packetfence.com
+  ingress_controller: nginx
+  ingress_class_name: nginx
+  
+  # Optional: Custom ingress annotations
+  ingress_annotations: |
+    nginx.ingress.kubernetes.io/proxy-body-size: 64m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    
+  # TLS configuration for HTTPS (port 443)
+  ingress_tls_secret: awx-tls-secret
+
+  service_annotations: |
+    service.beta.kubernetes.io/linode-loadbalancer-throttle: "4"
+  
+  projects_persistence: false
+    #  projects_existing_claim: awx-data
+  receptor_log_level: debug
+  no_log: false
+  task_resource_requirements:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 100M
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+      ephemeral-storage: 500M
+  web_resource_requirements:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 4Gi
+  ee_resource_requirements:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 1000m
+      memory: 4Gi
+  redis_resource_requirements:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 1000m
+      memory: 4Gi
+  rsyslog_resource_requirements:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  init_container_resource_requirements:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  postgres_init_container_resource_requirements:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
