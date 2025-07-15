@@ -13,8 +13,9 @@ spec:
   postgres_configuration_secret: awx-old-postgres-configuration
   admin_user: admin
   admin_password_secret: awx-admin-password
+    #  projects_persistence: true
   projects_persistence: true
-  projects_existing_claim: “awx-data”
+  projects_existing_claim: awx-data
   nodeport_port: 30000
   replicas: 3
 
@@ -47,7 +48,6 @@ spec:
   service_annotations: |
     service.beta.kubernetes.io/linode-loadbalancer-throttle: "4"
   
-  projects_persistence: false
     #  projects_existing_claim: awx-data
   receptor_log_level: debug
   no_log: false
